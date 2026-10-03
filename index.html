@@ -95,16 +95,17 @@ const ME='Pavan Muthoju', DAY_OF_MONTH=1;
 const config={
   overall:{nudgesEnabled:true,maxNudgesMonth:15,capEnabled:true,maxTotal:1000},
   tools:{
-    cursor:{enabled:true,nudge:true,nudgeAmount:50,perDay:2,monthlyCap:10,threshold:95,maxRequest:500},
-    copilot:{enabled:true,nudge:true,nudgeAmount:25,perDay:2,monthlyCap:6,threshold:95,maxRequest:200},
-    claude:{enabled:true,nudge:true,nudgeAmount:50,perDay:2,monthlyCap:10,threshold:95,maxRequest:500}
+    cursor:{enabled:true,base:300,custom:true,nudge:true,nudgeAmount:50,perDay:2,monthlyCap:10,threshold:95,maxRequest:500},
+    copilot:{enabled:true,base:100,custom:true,nudge:true,nudgeAmount:25,perDay:2,monthlyCap:6,threshold:95,maxRequest:200},
+    claude:{enabled:true,base:400,custom:true,nudge:true,nudgeAmount:50,perDay:2,monthlyCap:10,threshold:95,maxRequest:500}
   }
 };
 const tools={
-  cursor:{name:'Cursor',color:'#185FA5',bg:'var(--bg-accent)',fg:'var(--text-accent)',icon:'ti-pointer',limit:300,used:288.00,breakdown:[['Pro seat',40],['Premium requests',214.5],['Background agents',33.5]]},
-  copilot:{name:'Copilot',color:'#1D9E75',bg:'var(--bg-success)',fg:'var(--text-success)',icon:'ti-brand-github',limit:100,used:78.40,breakdown:[['Business seat',19],['Premium requests',59.4]]},
-  claude:{name:'Claude',color:'#D85A30',bg:'var(--bg-warning)',fg:'var(--text-warning)',icon:'ti-sparkles',limit:400,used:251.75,breakdown:[['Claude Code',198.5],['Claude chat',53.25]]}
+  cursor:{name:'Cursor',color:'#185FA5',bg:'var(--bg-accent)',fg:'var(--text-accent)',icon:'ti-pointer',extra:0,used:288.00,breakdown:[['Pro seat',40],['Premium requests',214.5],['Background agents',33.5]]},
+  copilot:{name:'Copilot',color:'#1D9E75',bg:'var(--bg-success)',fg:'var(--text-success)',icon:'ti-brand-github',extra:0,used:78.40,breakdown:[['Business seat',19],['Premium requests',59.4]]},
+  claude:{name:'Claude',color:'#D85A30',bg:'var(--bg-warning)',fg:'var(--text-warning)',icon:'ti-sparkles',extra:0,used:251.75,breakdown:[['Claude Code',198.5],['Claude chat',53.25]]}
 };
+Object.keys(tools).forEach(k=>Object.defineProperty(tools[k],'limit',{get(){return config.tools[k].base+this.extra},set(v){this.extra=Math.max(0,v-config.tools[k].base)},enumerable:true}));
 let seed=11;const rnd=()=>{seed=(seed*9301+49297)%233280;return seed/233280};
 const pick=a=>a[Math.floor(rnd()*a.length)];
 const others=['Ganesh Siripuram','Priya Nair','Rajesh Kumar','Ananya Singh','Vikram Rao','Sneha Iyer','Arjun Mehta'];
@@ -150,7 +151,7 @@ function goSet(k){st.setTab=k;st.toast='';render()}
 
 function nudgeBox(k){
   const t=tools[k],c=C(k);
-  if(!nudgeOn(k))return `<div class="off"><div class="muted"><i class="ti ti-bolt-off" aria-hidden="true"></i> Quick nudges are off${O.nudgesEnabled?' for '+t.name:''}. Use a custom request.</div></div>`;
+  if(!nudgeOn(k))return `<div class="off"><div class="muted"><i class="ti ti-bolt-off" aria-hidden="true"></i> Quick nudges are off${O.nudgesEnabled?' for '+t.name:''}.${c.custom?' Use a custom request.':''}</div></div>`;
   const L=limitsFor(k);
   const counts=`${L.day} of ${c.perDay} left today · ${L.month} of ${c.monthlyCap} ${t.name} this month · ${L.all} of ${O.maxNudgesMonth} across tools`;
   if(!eligible(k)){
@@ -161,7 +162,7 @@ function nudgeBox(k){
     <div class="muted">${counts}</div></div>`;
   }
   if(capBlocks(c.nudgeAmount))return `<div class="off"><div style="font-size:14px;font-weight:500"><i class="ti ti-lock" aria-hidden="true"></i> Combined limit reached</div><div class="muted" style="margin-top:2px">Your tools total ${$0(totalLimit())} of the ${$0(O.maxTotal)} allowed across all tools. Contact your DX admin.</div></div>`;
-  const msg={day:'Back tomorrow, or use a custom request',tool:`All ${c.monthlyCap} ${t.name} nudges used this month`,all:`All ${O.maxNudgesMonth} nudges used this month across tools`}[L.why];
+  const msg={day:''+''+(C(k).custom?'Back tomorrow, or use a custom request':'Back tomorrow'),tool:`All ${c.monthlyCap} ${t.name} nudges used this month`,all:`All ${O.maxNudgesMonth} nudges used this month across tools`}[L.why];
   return `<div class="nudge"><div class="row">
     <div><div style="font-size:14px;font-weight:500;color:var(--text-success)"><i class="ti ti-bolt" aria-hidden="true"></i> Quick nudge +${$(c.nudgeAmount)}</div>
     <div style="font-size:13px;color:var(--text-success)">You're near your limit · approved instantly</div></div>
@@ -186,8 +187,8 @@ function limitCard(title,limit,used,segments,tiles,k){
     if(parts.length)extra=`<div class="muted" style="margin-top:4px">${parts.join(' · ')}</div>`;
   }
   return `<div class="card">
-    <div class="row"><div style="font-size:15px;font-weight:500">${title}</div>${k?`<button class="ghostbtn" onclick="toggleForm()">Custom request</button>`:''}</div>
-    <div class="row" style="margin-top:6px"><span class="muted">Monthly limit: ${$(limit)}</span><span class="muted">October 2026 · resets Oct 31</span></div>${extra}
+    <div class="row"><div style="font-size:15px;font-weight:500">${title}</div>${k&&C(k).custom?`<button class="ghostbtn" onclick="toggleForm()">Custom request</button>`:''}</div>
+    <div class="row" style="margin-top:6px"><span class="muted">Monthly limit: ${$(limit)}${k?` (base ${$0(C(k).base)}${tools[k].extra>0?' + '+$0(tools[k].extra)+' in increases':''})`:''}</span><span class="muted">October 2026 · resets Oct 31</span></div>${extra}
     <div class="row" style="margin-top:14px;align-items:flex-end">
       <div><div class="label">Total used</div><span style="font-size:24px;font-weight:500">${$(used)}</span> <span class="muted">/ ${$(limit)}</span></div>
       <div style="text-align:right"><div class="label">Remaining</div><div style="font-size:24px;font-weight:500;color:${k&&limit-used<C(k).nudgeAmount?'var(--text-danger)':'var(--text-success)'}">${$(Math.max(0,limit-used))}</div></div>
@@ -196,7 +197,7 @@ function limitCard(title,limit,used,segments,tiles,k){
     <div class="row"><span class="muted">${pct(used,limit)} of monthly limit used</span>${k?`<span class="muted">Marker: ${thr}% nudge threshold</span>`:''}</div>
     <div class="label" style="margin:14px 0 8px">Consumption details</div>
     <div class="grid">${tiles}</div>
-    ${k?nudgeBox(k):''}${st.formOpen&&k?form(k):''}
+    ${k?nudgeBox(k)+(C(k).custom?'':`<div class="muted" style="margin-top:10px"><i class="ti ti-ban" aria-hidden="true"></i> Custom requests are off for ${tools[k].name}.</div>`):''}${st.formOpen&&k&&C(k).custom?form(k):''}
   </div>`;
 }
 function form(k){
@@ -220,6 +221,7 @@ function toggleForm(){st.formOpen=!st.formOpen;st.toast='';render()}
 function clearErr(){const e=document.getElementById('err');if(e)e.textContent=''}
 function submitReq(k){
   const t=tools[k],c=C(k),a=parseFloat(document.getElementById('amt').value),w=document.getElementById('why').value.trim(),e=document.getElementById('err');
+  if(!c.custom)return;
   if(!a||a<=t.limit){e.textContent='Enter a limit higher than '+$(t.limit)+'.';return}
   if(a>c.maxRequest){e.textContent='The most you can request for '+t.name+' is '+$0(c.maxRequest)+'.';return}
   if(capBlocks(a-t.limit)){e.textContent='That would take you past the '+$0(O.maxTotal)+' combined limit. Max here is '+$0(t.limit+headroom())+'.';return}
@@ -289,34 +291,37 @@ function approvals(){
   return `<div class="card"><div class="row" style="margin-bottom:6px"><div style="font-size:15px;font-weight:500">Pending custom requests</div><span class="muted">${p.length} waiting</span></div>
   ${p.length?p.map(r=>{const over=r.to>C(r.tool).maxRequest,stale=r.user===ME&&tools[r.tool].limit>=r.to,cap=r.user===ME&&!stale&&capBlocks(r.to-tools[r.tool].limit);
     return `<div class="req"><div class="row"><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">${toolPill(r.tool)}<span style="font-size:14px;font-weight:500">${$(r.from)} → ${$(r.to)}</span><span class="muted">+${$0(r.to-r.from)}</span>
-    ${over?'<span class="pill" style="background:var(--bg-danger);color:var(--text-danger)">Above tool max</span>':''}${cap?'<span class="pill" style="background:var(--bg-danger);color:var(--text-danger)">Over combined cap</span>':''}${stale?'<span class="pill" style="background:var(--bg-warning);color:var(--text-warning)">Already reached</span>':''}</div>
+    ${over?'<span class="pill" style="background:var(--bg-danger);color:var(--text-danger)">Above tool max</span>':''}${cap?'<span class="pill" style="background:var(--bg-danger);color:var(--text-danger)">Over combined cap</span>':''}${!C(r.tool).custom?'<span class="pill" style="background:var(--bg-warning);color:var(--text-warning)">Custom requests off</span>':''}${stale?'<span class="pill" style="background:var(--bg-warning);color:var(--text-warning)">Already reached</span>':''}</div>
     <div style="display:flex;gap:6px"><button class="primary" onclick="decide(${r.id},'Fulfilled')">Approve</button><button class="ghostbtn" onclick="decide(${r.id},'Rejected')">Reject</button></div></div>
     <div class="muted" style="margin-top:4px">${r.user} · ${r.why} · ${ago(r.day)}</div></div>`}).join(''):'<div class="muted req">All caught up.</div>'}</div>`;
 }
 function decide(id,s){const r=requests.find(x=>x.id===id);r.status=s;if(s==='Fulfilled'&&r.user===ME)tools[r.tool].limit=Math.max(tools[r.tool].limit,r.to);st.toast=`${r.user}'s ${tools[r.tool].name} request ${s==='Fulfilled'?'approved':'rejected'}.`;render()}
 
-const num=(id,label,v,step,hint)=>`<label class="muted">${label}<input id="${id}" type="number" step="${step}" value="${v}" style="width:100%;margin-top:4px" oninput="clearErr()">${hint?`<span style="font-size:12px;color:var(--text-muted)">${hint}</span>`:''}</label>`;
-const sw=(id,title,desc,on)=>`<div class="sw"><div><div style="font-size:14px;font-weight:500">${title}</div><div class="muted">${desc}</div></div><label style="font-size:13px;white-space:nowrap"><input type="checkbox" id="${id}" ${on?'checked':''}> Enabled</label></div>`;
+const num=(id,label,v,step,hint)=>`<label class="muted">${label}<input id="${id}" type="number" step="${step}" value="${v}" style="width:100%;margin-top:4px" oninput="clearErr();preview()">${hint?`<span style="font-size:12px;color:var(--text-muted)">${hint}</span>`:''}</label>`;
+const sw=(id,title,desc,on)=>`<div class="sw"><div><div style="font-size:14px;font-weight:500">${title}</div><div class="muted">${desc}</div></div><label style="font-size:13px;white-space:nowrap"><input type="checkbox" id="${id}" ${on?'checked':''} onchange="preview()"> Enabled</label></div>`;
 
 function settings(){
   const subs=[['overall','Overall'],...Object.keys(tools).map(k=>[k,tools[k].name])];
   const nav=`<div class="inner">${subs.map(([k,l])=>`<button class="${st.setTab===k?'on':''}" onclick="goSet('${k}')">${l}</button>`).join('')}</div>`;
   if(st.setTab==='overall'){
     const vis=Object.keys(tools).filter(k=>C(k).enabled);
-    const sumMax=vis.reduce((s,k)=>s+C(k).maxRequest,0), sumCaps=vis.reduce((s,k)=>s+C(k).monthlyCap,0);
+    const sumCaps=vis.reduce((s,k)=>s+C(k).monthlyCap,0);
     return nav+`<div class="card"><div style="font-size:15px;font-weight:500">Overall settings</div><div class="muted" style="margin-bottom:4px">Apply to every user, across all tools.</div>
       ${sw('o_nudge','Quick nudges','Master switch. When off, nudges are off for every tool.',O.nudgesEnabled)}
       <div style="padding-bottom:12px"><div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(200px,1fr))">${num('o_nm','Max nudges per user per month, all tools',O.maxNudgesMonth,1)}</div>
       <div class="muted" style="margin-top:8px">Per-tool monthly caps add up to ${sumCaps}. ${O.maxNudgesMonth<sumCaps?'This overall limit will apply first.':'Per-tool caps will apply first.'}</div></div>
       ${sw('o_cap','Combined cap across tools','Limits the total of a user\'s Cursor, Copilot, and Claude limits.',O.capEnabled)}
-      <div><div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(200px,1fr))">${num('o_max','Max per user across tools ($)',O.maxTotal,50,O.capEnabled?'':'Not enforced while the cap is off')}</div>
-      <div class="muted" style="margin-top:8px">Per-tool request maxes add up to ${$0(sumMax)}.</div></div>
+      <div><div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(200px,1fr))">${num('o_max','Max per user across tools ($)',O.maxTotal,50,O.capEnabled?'':'Not enforced while the cap is off')}</div></div>
       <div class="err" id="err"></div><button class="primary" onclick="saveOverall()">Save overall settings</button></div>`;
   }
   const k=st.setTab,c=C(k),t=tools[k];
   return nav+`<div class="card"><div class="row"><div style="display:flex;align-items:center;gap:8px"><i class="ti ${t.icon}" aria-hidden="true"></i><span style="font-size:15px;font-weight:500">${t.name} settings</span></div>${!O.nudgesEnabled?'<span class="pill" style="background:var(--bg-warning);color:var(--text-warning)">Nudges off globally</span>':''}</div>
     ${sw('t_en','Visible to developers','Show this tool on the Developer Experience dashboard.',c.enabled)}
     ${sw('t_nu','Quick nudges','Allow auto-approved nudges for '+t.name+'.',c.nudge)}
+    ${sw('t_cr','Custom requests','Let developers ask for larger increases with manager approval.',c.custom)}
+    <div style="padding:12px 0;border-top:0.5px solid var(--border)"><div class="label" style="margin-bottom:8px">Base limit</div>
+    <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(200px,1fr))">${num('t_base','Base monthly limit per user ($)',c.base,25)}</div>
+    <div class="muted" style="margin-top:8px">Every user starts each month at this limit. Nudges and approved requests add to it.</div></div>
     <div style="padding-top:12px;border-top:0.5px solid var(--border)"><div class="label" style="margin-bottom:8px">Quick nudge</div>
     <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(170px,1fr))">
       ${num('t_amt','Nudge amount ($)',c.nudgeAmount,5)}${num('t_day','Max nudges per day',c.perDay,1)}${num('t_mon','Max nudges per month',c.monthlyCap,1)}${num('t_thr','Unlock at usage (%)',c.threshold,1)}
@@ -324,7 +329,29 @@ function settings(){
     <div class="muted" style="margin-top:8px">Unlocks at ${c.threshold}% used or under ${$0(c.nudgeAmount)} left. Max auto-approved per user: ${$0(c.nudgeAmount*c.monthlyCap)} a month. The overall limit of ${O.maxNudgesMonth} nudges a month still applies.</div></div>
     <div style="padding-top:12px;margin-top:12px;border-top:0.5px solid var(--border)"><div class="label" style="margin-bottom:8px">Custom requests</div>
     <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(200px,1fr))">${num('t_max','Max monthly limit a user can request ($)',c.maxRequest,50)}</div></div>
+    <div id="prov"></div>
     <div class="err" id="err"></div><button class="primary" onclick="saveTool('${k}')">Save ${t.name} settings</button></div>`;
+}
+function preview(){
+  const el=document.getElementById('prov');
+  if(!el)return;
+  const v=id=>parseInt(document.getElementById(id).value)||0, ck=id=>document.getElementById(id).checked;
+  const base=v('t_base'),amt=v('t_amt'),mon=v('t_mon'),mx=v('t_max'),nu=ck('t_nu')&&O.nudgesEnabled,cr=ck('t_cr');
+  const n=nu?Math.min(mon,O.maxNudgesMonth):0, nudgeTotal=n*amt;
+  const viaReq=cr?Math.max(base,mx):base;
+  const noAppr=base+nudgeTotal, withAppr=viaReq+nudgeTotal;
+  const line=(l,r)=>`<div class="row" style="padding:4px 0"><span class="muted">${l}</span><span style="font-size:14px">${r}</span></div>`;
+  el.innerHTML=`<div style="margin-top:12px;padding:12px;border:0.5px solid var(--border-accent);background:var(--bg-accent)">
+    <div style="font-size:14px;color:var(--text-accent)">Max a user can be provisioned</div>
+    <div style="font-size:24px;font-weight:500;color:var(--text-accent);margin:2px 0 8px">${$0(withAppr)} a month</div>
+    ${line('Base limit',$0(base))}
+    ${line('Custom requests, with manager approval',cr?(mx>base?'up to '+$0(mx)+' (+'+$0(mx-base)+')':'none above base'):'Off')}
+    ${line('Quick nudges',nu?`${n} × ${$0(amt)} = +${$0(nudgeTotal)}${O.maxNudgesMonth<mon?' (overall limit of '+O.maxNudgesMonth+')':''}`:'Off')}
+    <div style="border-top:0.5px solid var(--border-accent);margin-top:6px;padding-top:6px">
+    ${line('Without approval (base + nudges)',$0(noAppr))}
+    ${cr?line('With approval (request max + nudges)',$0(withAppr)):''}</div>
+    ${O.capEnabled&&withAppr>O.maxTotal?`<div style="font-size:13px;color:var(--text-accent);margin-top:6px">The ${$0(O.maxTotal)} combined cap across tools can lower this for users with other tools.</div>`:''}
+  </div>`;
 }
 function saveOverall(){
   const e=document.getElementById('err'),mx=parseInt(document.getElementById('o_max').value),nm=parseInt(document.getElementById('o_nm').value);
@@ -337,16 +364,18 @@ function saveOverall(){
 }
 function saveTool(k){
   const g=id=>parseInt(document.getElementById(id).value),e=document.getElementById('err');
-  const a=g('t_amt'),d=g('t_day'),m=g('t_mon'),th=g('t_thr'),mx=g('t_max');
-  const en=document.getElementById('t_en').checked;
+  const a=g('t_amt'),d=g('t_day'),m=g('t_mon'),th=g('t_thr'),mx=g('t_max'),b=g('t_base');
+  const en=document.getElementById('t_en').checked,cr=document.getElementById('t_cr').checked;
+  if(isNaN(b)||b<0||b>10000){e.textContent='Base limit must be between $0 and $10,000.';return}
   if(!a||a<5||a>1000){e.textContent='Nudge amount must be between $5 and $1,000.';return}
   if(!d||d<1||d>10){e.textContent='Max nudges per day must be between 1 and 10.';return}
   if(!m||m<d||m>100){e.textContent='Max nudges per month must be at least the daily count and at most 100.';return}
   if(!th||th<50||th>100){e.textContent='Unlock threshold must be between 50% and 100%.';return}
-  if(!mx||mx<a||mx>10000){e.textContent='Max request must be at least the nudge amount and at most $10,000.';return}
+  if(cr&&(!mx||mx<=b||mx>10000)){e.textContent='Max request must be above the base limit and at most $10,000.';return}
   if(!en&&enabledTools().filter(x=>x!==k).length===0){e.textContent='Keep at least one tool visible.';return}
-  Object.assign(config.tools[k],{enabled:en,nudge:document.getElementById('t_nu').checked,nudgeAmount:a,perDay:d,monthlyCap:m,threshold:th,maxRequest:mx});
+  Object.assign(config.tools[k],{enabled:en,base:b,custom:cr,nudge:document.getElementById('t_nu').checked,nudgeAmount:a,perDay:d,monthlyCap:m,threshold:th,maxRequest:mx});
   if(st.devTab===k&&!en)st.devTab='overall';
+  if(!cr)st.formOpen=false;
   st.toast=tools[k].name+' settings saved.';render();
 }
 
@@ -357,6 +386,7 @@ function render(){
   document.getElementById('tabs').innerHTML=list.map(([k,l])=>`<button class="tab ${k===cur?'on':''}" onclick="goTab('${k}')">${l}</button>`).join('');
   document.getElementById('toast').innerHTML=st.toast?`<div class="toast"><i class="ti ti-circle-check" aria-hidden="true"></i> ${st.toast}</div>`:'';
   document.getElementById('view').innerHTML=st.mode==='dev'?devView():st.adminTab==='analytics'?analytics():st.adminTab==='approvals'?approvals():settings();
+  preview();
 }
 render();
 </script>

@@ -28,7 +28,7 @@ python3 -m http.server 8080
 - Approvals: approve or reject custom requests, with flags for "Above tool max", "Over combined cap", "Already reached"
 - Settings
   - Overall: master switch for quick nudges, max nudges per user per month across tools, optional combined cap across tools
-  - Per tool (Cursor, Copilot, Claude): visible to developers, nudges on/off, nudge amount, max nudges per day, max nudges per month, unlock threshold, max request limit
+  - Per tool (Cursor, Copilot, Claude): visible to developers, base monthly limit, quick nudges on/off, custom requests on/off, nudge amount, max nudges per day, max nudges per month, unlock threshold, max request limit, and a live "max a user can be provisioned" preview
 
 ## Nudge rules
 
