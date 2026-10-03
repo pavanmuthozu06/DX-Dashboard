@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Developer Experience · AI tool limits</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
+<style>
+:root{
+  --font-sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  --radius:6px;
+  --page:#EEF2F7;--surface-1:#F5F7FA;--surface-2:#FFFFFF;--border:#D6DCE4;
+  --text-primary:#14213A;--text-secondary:#56637A;--text-muted:#8A95A8;
+  --bg-accent:#E6F1FB;--text-accent:#0C447C;--border-accent:#85B7EB;--fill-accent:#0B2D5B;--on-accent:#FFFFFF;
+  --bg-success:#E1F5EE;--text-success:#085041;--border-success:#5DCAA5;
+  --bg-warning:#FAEEDA;--text-warning:#633806;--border-warning:#EF9F27;
+  --bg-danger:#FCEBEB;--text-danger:#A32D2D;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --page:#0E1520;--surface-1:#141D2B;--surface-2:#1A2536;--border:#2E3B50;
+    --text-primary:#E8EDF5;--text-secondary:#A3AEC2;--text-muted:#6E7A90;
+    --bg-accent:#0C2A4D;--text-accent:#B5D4F4;--border-accent:#185FA5;
+    --bg-success:#0A3328;--text-success:#9FE1CB;--border-success:#0F6E56;
+    --bg-warning:#3A2709;--text-warning:#FAC775;--border-warning:#854F0B;
+    --bg-danger:#3D1515;--text-danger:#F7C1C1;
+  }
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--page);font-family:var(--font-sans);font-size:14px;line-height:1.5;color:var(--text-primary)}
+.page{max-width:1100px;margin:0 auto;padding:24px 16px}
+button{font:inherit;padding:8px 14px;border:0.5px solid var(--border);background:transparent;color:var(--text-primary);border-radius:var(--radius);cursor:pointer}
+button:focus-visible,input:focus-visible,textarea:focus-visible{outline:2px solid #378ADD;outline-offset:2px}
+input,textarea{font:inherit;color:var(--text-primary);background:var(--surface-2);border:0.5px solid var(--border);border-radius:2px;padding:8px 10px}
+input:disabled{background:var(--surface-1);color:var(--text-secondary)}
+input[type=checkbox]{width:16px;height:16px;padding:0;vertical-align:-3px;accent-color:#0B2D5B}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+
+.app{border:0.5px solid var(--border);border-radius:12px;overflow:hidden;background:var(--surface-1)}
+.topbar{background:#0B2D5B;color:#FFFFFF;padding:14px 18px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.subbar{background:#123E78;padding:0 10px;display:flex;gap:2px;overflow-x:auto}
+.tab{border:none;background:transparent;padding:11px 14px;font-size:14px;color:#B5D4F4;border-bottom:3px solid transparent;border-radius:0;white-space:nowrap}
+.tab:hover{color:#FFFFFF}
+.tab.on{color:#FFFFFF;border-bottom-color:#5DCAA5;font-weight:500}
+.seg{display:flex;border:1px solid #85B7EB;border-radius:2px;overflow:hidden}
+.seg button{border:none;border-radius:0;background:transparent;color:#FFFFFF;font-size:13px;padding:6px 12px}
+.seg button.on{background:#5DCAA5;color:#04342C;font-weight:500}
+.inner{display:flex;border:0.5px solid #0B2D5B;border-radius:2px;overflow:hidden;margin-bottom:1rem;width:fit-content;max-width:100%;overflow-x:auto}
+.inner button{border:none;border-radius:0;font-size:13px;padding:7px 14px;background:var(--surface-2);color:var(--text-primary);white-space:nowrap}
+.inner button.on{background:#0B2D5B;color:#FFFFFF}
+.body{padding:16px}
+.card{background:var(--surface-2);border:0.5px solid var(--border);border-top:3px solid #0B2D5B;padding:1rem 1.25rem;margin-bottom:1rem}
+.muted{font-size:13px;color:var(--text-secondary)}
+.row{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.bar{display:flex;height:12px;border-radius:2px;overflow:hidden;background:var(--surface-1);margin:8px 0 4px;position:relative;border:0.5px solid var(--border)}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.tile{padding:10px 12px;background:var(--surface-1);border:0.5px solid var(--border)}
+.metric{padding:12px;background:var(--surface-2);border:0.5px solid var(--border)}
+.pill{font-size:12px;padding:3px 10px;border-radius:2px;font-weight:500}
+.req{border-top:0.5px solid var(--border);padding:10px 0}
+.err{font-size:13px;color:var(--text-danger);min-height:18px}
+.primary{background:#0B2D5B;color:#FFFFFF;border:none;border-radius:2px}
+.primary:hover{background:#123E78}
+.ghostbtn{border-radius:2px;border:0.5px solid #0B2D5B;color:var(--text-primary)}
+.nudge{border:0.5px solid var(--border-success);background:var(--bg-success);padding:12px;margin-top:14px}
+.off{border:0.5px solid var(--border);background:var(--surface-1);padding:12px;margin-top:14px}
+.warn{border:0.5px solid var(--border-warning);background:var(--bg-warning);color:var(--text-warning);padding:10px 12px;font-size:13px;margin-top:10px}
+.toast{background:var(--bg-success);color:var(--text-success);border-left:3px solid #1D9E75;padding:8px 12px;font-size:13px;margin-bottom:1rem}
+.label{font-size:12px;letter-spacing:0.04em;color:var(--text-secondary)}
+.dot{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:4px;vertical-align:-1px}
+.sw{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 0;border-top:0.5px solid var(--border)}
+@media (prefers-color-scheme: dark){.primary{background:#185FA5}.primary:hover{background:#378ADD}.ghostbtn{border-color:#85B7EB}}
+</style>
+</head>
+<body>
+<div class="page">
+<h1 class="sr-only">Developer Experience dashboard</h1>
+<div class="app">
+  <div class="topbar">
+    <div style="display:flex;align-items:center;gap:10px">
+      <div style="width:34px;height:34px;border:1.5px solid #FFFFFF;display:flex;align-items:center;justify-content:center"><i class="ti ti-code" style="font-size:18px" aria-hidden="true"></i></div>
+      <div><div style="font-size:16px;font-weight:500">Developer Experience</div><div style="font-size:12px;color:#B5D4F4">AI tool limits and access</div></div>
+    </div>
+    <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+      <div class="seg" id="seg"></div>
+      <div style="text-align:right"><div style="font-size:13px;font-weight:500">Pavan Muthoju</div><div style="font-size:12px;color:#B5D4F4">pkmuthozu@altimetrik.com</div></div>
+    </div>
+  </div>
+  <nav class="subbar" id="tabs"></nav>
+  <main class="body"><div id="toast" role="status"></div><div id="view"></div></main>
+</div>
+</div>
+<script>
+const ME='Pavan Muthoju', DAY_OF_MONTH=1;
+const config={
+  overall:{nudgesEnabled:true,maxNudgesMonth:15,capEnabled:true,maxTotal:1000},
+  tools:{
+    cursor:{enabled:true,nudge:true,nudgeAmount:50,perDay:2,monthlyCap:10,threshold:95,maxRequest:500},
+    copilot:{enabled:true,nudge:true,nudgeAmount:25,perDay:2,monthlyCap:6,threshold:95,maxRequest:200},
+    claude:{enabled:true,nudge:true,nudgeAmount:50,perDay:2,monthlyCap:10,threshold:95,maxRequest:500}
+  }
+};
+const tools={
+  cursor:{name:'Cursor',color:'#185FA5',bg:'var(--bg-accent)',fg:'var(--text-accent)',icon:'ti-pointer',limit:300,used:288.00,breakdown:[['Pro seat',40],['Premium requests',214.5],['Background agents',33.5]]},
+  copilot:{name:'Copilot',color:'#1D9E75',bg:'var(--bg-success)',fg:'var(--text-success)',icon:'ti-brand-github',limit:100,used:78.40,breakdown:[['Business seat',19],['Premium requests',59.4]]},
+  claude:{name:'Claude',color:'#D85A30',bg:'var(--bg-warning)',fg:'var(--text-warning)',icon:'ti-sparkles',limit:400,used:251.75,breakdown:[['Claude Code',198.5],['Claude chat',53.25]]}
+};
+let seed=11;const rnd=()=>{seed=(seed*9301+49297)%233280;return seed/233280};
+const pick=a=>a[Math.floor(rnd()*a.length)];
+const others=['Ganesh Siripuram','Priya Nair','Rajesh Kumar','Ananya Singh','Vikram Rao','Sneha Iyer','Arjun Mehta'];
+const reasons=['Migration sprint needs more credits','Agentic refactor of payments service','Large test generation run','Onboarding new microservice'];
+let requests=[],nid=1;
+const add=r=>requests.push({id:nid++,...r});
+const nCounts=[11,6,14,10,7,12,9],cCounts=[3,1,4,2,1,3,2];
+for(let d=0;d<7;d++){
+  for(let i=0;i<nCounts[d];i++){const tk=pick(['cursor','cursor','claude','claude','copilot']);const f=pick([100,200,300]);add({user:pick(others),tool:tk,from:f,to:f+config.tools[tk].nudgeAmount,type:'nudge',status:'Auto-approved',day:d,why:'Quick nudge'})}
+  for(let i=0;i<cCounts[d];i++){const f=pick([100,150,200]);add({user:pick(others),tool:pick(['cursor','claude','copilot']),from:f,to:f+pick([50,100,150]),type:'custom',status:d<2?'Pending':(rnd()<0.8?'Fulfilled':'Rejected'),day:d,why:pick(reasons)})}
+}
+add({user:ME,tool:'claude',from:350,to:400,type:'nudge',status:'Auto-approved',day:5,why:'Quick nudge'});
+add({user:ME,tool:'claude',from:400,to:500,type:'custom',status:'Pending',day:3,why:'Agentic refactor of payments service'});
+add({user:ME,tool:'cursor',from:250,to:300,type:'custom',status:'Fulfilled',day:60,why:'Migration work needs more premium requests'});
+
+const st={mode:'dev',devTab:'overall',adminTab:'analytics',setTab:'overall',formOpen:false,toast:''};
+const $=n=>'$'+n.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+const $0=n=>'$'+Math.round(n).toLocaleString('en-US');
+const pctN=(a,b)=>a/b*100;
+const pct=(a,b)=>pctN(a,b).toFixed(1)+'%';
+const ago=d=>d===0?'Today':d===1?'Yesterday':d+' days ago';
+const statusPill=s=>{const m={Fulfilled:['--bg-success','--text-success'],'Auto-approved':['--bg-success','--text-success'],Pending:['--bg-warning','--text-warning'],Rejected:['--bg-danger','--text-danger']}[s];return `<span class="pill" style="background:var(${m[0]});color:var(${m[1]})">${s}</span>`};
+const toolPill=k=>`<span class="pill" style="background:${tools[k].bg};color:${tools[k].fg}">${tools[k].name}</span>`;
+const C=k=>config.tools[k], O=config.overall;
+const enabledTools=()=>Object.keys(tools).filter(k=>C(k).enabled);
+const totalLimit=()=>enabledTools().reduce((s,k)=>s+tools[k].limit,0);
+const headroom=()=>O.maxTotal-totalLimit();
+const capBlocks=inc=>O.capEnabled&&totalLimit()+inc>O.maxTotal;
+const myNudges=(k,days)=>requests.filter(r=>r.user===ME&&(!k||r.tool===k)&&r.type==='nudge'&&r.day<days).length;
+const limitsFor=k=>{
+  const d=C(k).perDay-myNudges(k,1), m=C(k).monthlyCap-myNudges(k,DAY_OF_MONTH), a=O.maxNudgesMonth-myNudges(null,DAY_OF_MONTH);
+  const left=Math.max(0,Math.min(d,m,a));
+  const why=left>0?null:a<=0?'all':m<=0?'tool':'day';
+  return {left,day:Math.max(0,d),month:Math.max(0,m),all:Math.max(0,a),why};
+};
+const remaining=k=>Math.max(0,tools[k].limit-tools[k].used);
+const eligible=k=>pctN(tools[k].used,tools[k].limit)>=C(k).threshold||remaining(k)<C(k).nudgeAmount;
+const nudgeOn=k=>O.nudgesEnabled&&C(k).nudge;
+
+function setMode(m){st.mode=m;st.formOpen=false;st.toast='';render()}
+function goTab(k){if(st.mode==='dev')st.devTab=k;else st.adminTab=k;st.formOpen=false;st.toast='';render()}
+function goSet(k){st.setTab=k;st.toast='';render()}
+
+function nudgeBox(k){
+  const t=tools[k],c=C(k);
+  if(!nudgeOn(k))return `<div class="off"><div class="muted"><i class="ti ti-bolt-off" aria-hidden="true"></i> Quick nudges are off${O.nudgesEnabled?' for '+t.name:''}. Use a custom request.</div></div>`;
+  const L=limitsFor(k);
+  const counts=`${L.day} of ${c.perDay} left today · ${L.month} of ${c.monthlyCap} ${t.name} this month · ${L.all} of ${O.maxNudgesMonth} across tools`;
+  if(!eligible(k)){
+    const p=pctN(t.used,t.limit);
+    return `<div class="off"><div style="font-size:14px;font-weight:500"><i class="ti ti-lock" aria-hidden="true"></i> Quick nudge +${$(c.nudgeAmount)} locked</div>
+    <div class="muted" style="margin-top:2px">Unlocks at ${c.threshold}% used or under ${$(c.nudgeAmount)} left. You're at ${p.toFixed(1)}% with ${$(remaining(k))} left.</div>
+    <div class="bar" style="margin-top:8px"><div style="width:${Math.min(100,p/c.threshold*100)}%;background:var(--text-muted)"></div></div>
+    <div class="muted">${counts}</div></div>`;
+  }
+  if(capBlocks(c.nudgeAmount))return `<div class="off"><div style="font-size:14px;font-weight:500"><i class="ti ti-lock" aria-hidden="true"></i> Combined limit reached</div><div class="muted" style="margin-top:2px">Your tools total ${$0(totalLimit())} of the ${$0(O.maxTotal)} allowed across all tools. Contact your DX admin.</div></div>`;
+  const msg={day:'Back tomorrow, or use a custom request',tool:`All ${c.monthlyCap} ${t.name} nudges used this month`,all:`All ${O.maxNudgesMonth} nudges used this month across tools`}[L.why];
+  return `<div class="nudge"><div class="row">
+    <div><div style="font-size:14px;font-weight:500;color:var(--text-success)"><i class="ti ti-bolt" aria-hidden="true"></i> Quick nudge +${$(c.nudgeAmount)}</div>
+    <div style="font-size:13px;color:var(--text-success)">You're near your limit · approved instantly</div></div>
+    ${L.left>0?`<button class="primary" onclick="nudge('${k}')">Add ${$(c.nudgeAmount)}</button>`:`<span style="font-size:13px;color:var(--text-success)">${msg}</span>`}
+  </div><div style="font-size:12px;color:var(--text-success);margin-top:6px">${counts}</div></div>`;
+}
+function nudge(k){
+  const c=C(k);
+  if(!nudgeOn(k)||limitsFor(k).left<=0||!eligible(k)||capBlocks(c.nudgeAmount))return;
+  const t=tools[k];
+  add({user:ME,tool:k,from:t.limit,to:t.limit+c.nudgeAmount,type:'nudge',status:'Auto-approved',day:0,why:'Quick nudge'});
+  t.limit+=c.nudgeAmount;st.toast=`${t.name} limit raised to ${$(t.limit)}. Available now.`;render();
+}
+
+function limitCard(title,limit,used,segments,tiles,k){
+  const thr=k?C(k).threshold:0;
+  let extra='';
+  if(!k){
+    const parts=[];
+    if(O.capEnabled)parts.push(`Combined cap ${$0(O.maxTotal)} · ${$0(Math.max(0,headroom()))} of increases available`);
+    if(O.nudgesEnabled)parts.push(`${Math.max(0,O.maxNudgesMonth-myNudges(null,DAY_OF_MONTH))} of ${O.maxNudgesMonth} nudges left this month`);
+    if(parts.length)extra=`<div class="muted" style="margin-top:4px">${parts.join(' · ')}</div>`;
+  }
+  return `<div class="card">
+    <div class="row"><div style="font-size:15px;font-weight:500">${title}</div>${k?`<button class="ghostbtn" onclick="toggleForm()">Custom request</button>`:''}</div>
+    <div class="row" style="margin-top:6px"><span class="muted">Monthly limit: ${$(limit)}</span><span class="muted">October 2026 · resets Oct 31</span></div>${extra}
+    <div class="row" style="margin-top:14px;align-items:flex-end">
+      <div><div class="label">Total used</div><span style="font-size:24px;font-weight:500">${$(used)}</span> <span class="muted">/ ${$(limit)}</span></div>
+      <div style="text-align:right"><div class="label">Remaining</div><div style="font-size:24px;font-weight:500;color:${k&&limit-used<C(k).nudgeAmount?'var(--text-danger)':'var(--text-success)'}">${$(Math.max(0,limit-used))}</div></div>
+    </div>
+    <div class="bar">${segments.map(s=>`<div title="${s[0]}" style="width:${Math.min(100,s[1]/limit*100)}%;background:${s[2]}"></div>`).join('')}${k?`<div style="position:absolute;left:${thr}%;top:0;bottom:0;width:2px;background:var(--text-primary)"></div>`:''}</div>
+    <div class="row"><span class="muted">${pct(used,limit)} of monthly limit used</span>${k?`<span class="muted">Marker: ${thr}% nudge threshold</span>`:''}</div>
+    <div class="label" style="margin:14px 0 8px">Consumption details</div>
+    <div class="grid">${tiles}</div>
+    ${k?nudgeBox(k):''}${st.formOpen&&k?form(k):''}
+  </div>`;
+}
+function form(k){
+  const t=tools[k],c=C(k);
+  if(t.limit>=c.maxRequest)return `<div class="warn"><i class="ti ti-alert-triangle" aria-hidden="true"></i> Your ${t.name} limit is already at the ${$0(c.maxRequest)} maximum. Contact your DX admin for an exception.</div>`;
+  const allowed=Math.min(c.maxRequest,O.capEnabled?t.limit+Math.max(0,headroom()):Infinity);
+  if(allowed<=t.limit)return `<div class="warn"><i class="ti ti-alert-triangle" aria-hidden="true"></i> You've used the full ${$0(O.maxTotal)} combined limit across tools. Contact your DX admin.</div>`;
+  return `<div style="border-top:0.5px solid var(--border);margin-top:14px;padding-top:14px">
+    <div style="font-size:14px;font-weight:500">Custom ${t.name} limit request</div>
+    <div class="muted" style="margin-bottom:8px">Up to ${$0(allowed)} a month${allowed<c.maxRequest?' (combined cap)':''}. Needs manager approval.</div>
+    <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(180px,1fr))">
+      <label class="muted">Current limit<input value="${$(t.limit)}" disabled style="width:100%;margin-top:4px"></label>
+      <label class="muted">New monthly limit ($)<input id="amt" type="number" step="25" max="${allowed}" placeholder="${allowed}" style="width:100%;margin-top:4px" oninput="clearErr()"></label>
+    </div>
+    <label class="muted" style="display:block;margin-top:10px">Business justification<textarea id="why" rows="2" placeholder="Migration task needs more credits" style="width:100%;margin-top:4px" oninput="clearErr()"></textarea></label>
+    <div class="err" id="err"></div>
+    <div style="display:flex;gap:8px"><button class="primary" onclick="submitReq('${k}')">Submit request</button><button class="ghostbtn" onclick="toggleForm()">Cancel</button></div>
+  </div>`;
+}
+function toggleForm(){st.formOpen=!st.formOpen;st.toast='';render()}
+function clearErr(){const e=document.getElementById('err');if(e)e.textContent=''}
+function submitReq(k){
+  const t=tools[k],c=C(k),a=parseFloat(document.getElementById('amt').value),w=document.getElementById('why').value.trim(),e=document.getElementById('err');
+  if(!a||a<=t.limit){e.textContent='Enter a limit higher than '+$(t.limit)+'.';return}
+  if(a>c.maxRequest){e.textContent='The most you can request for '+t.name+' is '+$0(c.maxRequest)+'.';return}
+  if(capBlocks(a-t.limit)){e.textContent='That would take you past the '+$0(O.maxTotal)+' combined limit. Max here is '+$0(t.limit+headroom())+'.';return}
+  if(requests.some(r=>r.user===ME&&r.tool===k&&r.status==='Pending')){e.textContent='You already have a pending '+t.name+' request.';return}
+  if(!w){e.textContent='Add a business justification.';return}
+  add({user:ME,tool:k,from:t.limit,to:a,type:'custom',status:'Pending',day:0,why:w});
+  st.formOpen=false;st.toast='Request sent to your manager.';render();
+}
+function reqRow(r){
+  return `<div class="req"><div class="row"><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">${toolPill(r.tool)}${r.type==='nudge'?'<i class="ti ti-bolt" style="color:var(--text-success)" aria-hidden="true"></i>':''}<span style="font-size:14px;font-weight:500">${$(r.from)} → ${$(r.to)}</span></div>${statusPill(r.status)}</div>
+  <div class="muted" style="margin-top:4px">${r.why} · ${ago(r.day)} · ${r.type==='nudge'?'Auto-approved':'Approval: manager'}</div></div>`;
+}
+
+function devView(){
+  const k=st.devTab;
+  const mine=requests.filter(r=>r.user===ME&&(k==='overall'||r.tool===k)).sort((a,b)=>a.day-b.day||b.id-a.id);
+  let html;
+  if(k==='overall'){
+    const ts=enabledTools().map(x=>tools[x]);
+    const lim=ts.reduce((s,t)=>s+t.limit,0),used=ts.reduce((s,t)=>s+t.used,0);
+    const tiles=enabledTools().map(x=>{const t=tools[x],L=limitsFor(x);const tag=!nudgeOn(x)?'nudges off':!eligible(x)?'nudge locked':capBlocks(C(x).nudgeAmount)?'combined cap reached':L.left>0?'nudge ready':L.why==='day'?'no nudges left today':'monthly nudges used';
+      return `<div class="tile" style="cursor:pointer;border-left:3px solid ${t.color}" onclick="goTab('${x}')">
+      <div style="font-size:13px;font-weight:500"><i class="ti ${t.icon}" aria-hidden="true"></i> ${t.name}</div>
+      <div style="font-size:16px;font-weight:500;margin-top:4px">${$(t.used)}</div>
+      <div class="muted">${pct(t.used,t.limit)} of ${$0(t.limit)} · ${tag}</div></div>`}).join('');
+    html=limitCard('Combined monthly spending',lim,used,ts.map(t=>[t.name,t.used,t.color]),tiles,null);
+  }else{
+    const t=tools[k];
+    const tiles=t.breakdown.map(b=>`<div class="tile"><div style="font-size:13px;font-weight:500">${b[0]}</div><div style="font-size:16px;font-weight:500;margin-top:4px">${$(b[1])}</div><div class="muted">${pct(b[1],t.limit)} · variable usage</div></div>`).join('');
+    html=limitCard(t.name+' monthly spending limit',t.limit,t.used,[[t.name,t.used,t.color]],tiles,k);
+  }
+  return html+`<div class="card"><div class="row" style="margin-bottom:6px"><div style="font-size:15px;font-weight:500">Your requests</div><span class="muted">${mine.filter(r=>r.status==='Pending').length} pending</span></div>${mine.length?mine.map(reqRow).join(''):'<div class="muted req">No requests for this tool yet.</div>'}</div>`;
+}
+
+function analytics(){
+  const today=requests.filter(r=>r.day===0);
+  const nT=today.filter(r=>r.type==='nudge'),cT=today.filter(r=>r.type==='custom');
+  const ok=r=>r.status==='Auto-approved'||r.status==='Fulfilled';
+  const added=today.filter(ok).reduce((s,r)=>s+r.to-r.from,0);
+  const pending=requests.filter(r=>r.status==='Pending').length;
+  const users=new Set(today.map(r=>r.user)).size;
+  const metrics=[['Requests today',today.length,`${nT.length} nudges · ${cT.length} custom`],['Added today',$0(added),'Auto plus approved'],['Pending approvals',pending,'Across all days'],['Active requesters',users,'Unique users today']];
+  const days=[];for(let d=6;d>=0;d--){const r=requests.filter(x=>x.day===d);days.push({d,n:r.filter(x=>x.type==='nudge').length,c:r.filter(x=>x.type==='custom').length})}
+  const max=Math.max(...days.map(x=>x.n+x.c));
+  const wk=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  const todayIdx=new Date().getDay();
+  const chart=`<div style="display:flex;align-items:flex-end;gap:10px;height:150px;padding-top:10px">${days.map(x=>`<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px">
+    <div style="font-size:12px;color:var(--text-secondary)">${x.n+x.c}</div>
+    <div style="width:100%;max-width:38px;display:flex;flex-direction:column"><div style="height:${x.c/max*110}px;background:#185FA5"></div><div style="height:${x.n/max*110}px;background:#1D9E75"></div></div>
+    <div style="font-size:12px;${x.d===0?'font-weight:500;color:var(--text-primary)':'color:var(--text-secondary)'}">${x.d===0?'Today':wk[(todayIdx-x.d+7)%7]}</div></div>`).join('')}</div>
+    <div class="muted" style="margin-top:8px"><span class="dot" style="background:#1D9E75"></span>Quick nudges <span class="dot" style="background:#185FA5;margin-left:12px"></span>Custom requests</div>`;
+  const maxTool=Math.max(1,...Object.keys(tools).map(k=>today.filter(r=>r.tool===k).length));
+  const byTool=Object.keys(tools).map(k=>{const r=today.filter(x=>x.tool===k);const amt=r.filter(ok).reduce((s,x)=>s+x.to-x.from,0);
+    return `<div style="margin-bottom:12px"><div class="row" style="font-size:13px"><span style="font-weight:500">${tools[k].name}</span><span class="muted">${r.length} requests · ${$0(amt)} added</span></div>
+    <div class="bar"><div style="width:${r.length/maxTool*100}%;background:${tools[k].color}"></div></div></div>`}).join('');
+  const agg={};requests.filter(r=>r.day<7).forEach(r=>{agg[r.user]=agg[r.user]||{n:0,c:0,amt:0};r.type==='nudge'?agg[r.user].n++:agg[r.user].c++;if(ok(r))agg[r.user].amt+=r.to-r.from});
+  const top=Object.entries(agg).sort((a,b)=>b[1].amt-a[1].amt).slice(0,5);
+  return `<div class="grid" style="margin-bottom:1rem">${metrics.map(m=>`<div class="metric"><div class="label">${m[0]}</div><div style="font-size:24px;font-weight:500;margin:4px 0">${m[1]}</div><div class="muted">${m[2]}</div></div>`).join('')}</div>
+  <div class="card"><div class="row"><div style="font-size:15px;font-weight:500">Requests, last 7 days</div><span class="muted">${requests.filter(r=>r.day<7).length} total</span></div>${chart}</div>
+  <div class="card"><div style="font-size:15px;font-weight:500;margin-bottom:10px">Today by tool</div>${byTool}</div>
+  <div class="card"><div style="font-size:15px;font-weight:500;margin-bottom:4px">Top requesters, last 7 days</div>
+  ${top.map(([u,v],i)=>`<div class="req row"><div style="display:flex;gap:10px;align-items:center"><span class="muted">${i+1}</span><span style="font-size:14px;font-weight:500">${u}</span></div><span class="muted">${v.n} nudges · ${v.c} custom · ${$0(v.amt)}</span></div>`).join('')}</div>`;
+}
+
+function approvals(){
+  const p=requests.filter(r=>r.status==='Pending').sort((a,b)=>a.day-b.day);
+  return `<div class="card"><div class="row" style="margin-bottom:6px"><div style="font-size:15px;font-weight:500">Pending custom requests</div><span class="muted">${p.length} waiting</span></div>
+  ${p.length?p.map(r=>{const over=r.to>C(r.tool).maxRequest,stale=r.user===ME&&tools[r.tool].limit>=r.to,cap=r.user===ME&&!stale&&capBlocks(r.to-tools[r.tool].limit);
+    return `<div class="req"><div class="row"><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">${toolPill(r.tool)}<span style="font-size:14px;font-weight:500">${$(r.from)} → ${$(r.to)}</span><span class="muted">+${$0(r.to-r.from)}</span>
+    ${over?'<span class="pill" style="background:var(--bg-danger);color:var(--text-danger)">Above tool max</span>':''}${cap?'<span class="pill" style="background:var(--bg-danger);color:var(--text-danger)">Over combined cap</span>':''}${stale?'<span class="pill" style="background:var(--bg-warning);color:var(--text-warning)">Already reached</span>':''}</div>
+    <div style="display:flex;gap:6px"><button class="primary" onclick="decide(${r.id},'Fulfilled')">Approve</button><button class="ghostbtn" onclick="decide(${r.id},'Rejected')">Reject</button></div></div>
+    <div class="muted" style="margin-top:4px">${r.user} · ${r.why} · ${ago(r.day)}</div></div>`}).join(''):'<div class="muted req">All caught up.</div>'}</div>`;
+}
+function decide(id,s){const r=requests.find(x=>x.id===id);r.status=s;if(s==='Fulfilled'&&r.user===ME)tools[r.tool].limit=Math.max(tools[r.tool].limit,r.to);st.toast=`${r.user}'s ${tools[r.tool].name} request ${s==='Fulfilled'?'approved':'rejected'}.`;render()}
+
+const num=(id,label,v,step,hint)=>`<label class="muted">${label}<input id="${id}" type="number" step="${step}" value="${v}" style="width:100%;margin-top:4px" oninput="clearErr()">${hint?`<span style="font-size:12px;color:var(--text-muted)">${hint}</span>`:''}</label>`;
+const sw=(id,title,desc,on)=>`<div class="sw"><div><div style="font-size:14px;font-weight:500">${title}</div><div class="muted">${desc}</div></div><label style="font-size:13px;white-space:nowrap"><input type="checkbox" id="${id}" ${on?'checked':''}> Enabled</label></div>`;
+
+function settings(){
+  const subs=[['overall','Overall'],...Object.keys(tools).map(k=>[k,tools[k].name])];
+  const nav=`<div class="inner">${subs.map(([k,l])=>`<button class="${st.setTab===k?'on':''}" onclick="goSet('${k}')">${l}</button>`).join('')}</div>`;
+  if(st.setTab==='overall'){
+    const vis=Object.keys(tools).filter(k=>C(k).enabled);
+    const sumMax=vis.reduce((s,k)=>s+C(k).maxRequest,0), sumCaps=vis.reduce((s,k)=>s+C(k).monthlyCap,0);
+    return nav+`<div class="card"><div style="font-size:15px;font-weight:500">Overall settings</div><div class="muted" style="margin-bottom:4px">Apply to every user, across all tools.</div>
+      ${sw('o_nudge','Quick nudges','Master switch. When off, nudges are off for every tool.',O.nudgesEnabled)}
+      <div style="padding-bottom:12px"><div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(200px,1fr))">${num('o_nm','Max nudges per user per month, all tools',O.maxNudgesMonth,1)}</div>
+      <div class="muted" style="margin-top:8px">Per-tool monthly caps add up to ${sumCaps}. ${O.maxNudgesMonth<sumCaps?'This overall limit will apply first.':'Per-tool caps will apply first.'}</div></div>
+      ${sw('o_cap','Combined cap across tools','Limits the total of a user\'s Cursor, Copilot, and Claude limits.',O.capEnabled)}
+      <div><div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(200px,1fr))">${num('o_max','Max per user across tools ($)',O.maxTotal,50,O.capEnabled?'':'Not enforced while the cap is off')}</div>
+      <div class="muted" style="margin-top:8px">Per-tool request maxes add up to ${$0(sumMax)}.</div></div>
+      <div class="err" id="err"></div><button class="primary" onclick="saveOverall()">Save overall settings</button></div>`;
+  }
+  const k=st.setTab,c=C(k),t=tools[k];
+  return nav+`<div class="card"><div class="row"><div style="display:flex;align-items:center;gap:8px"><i class="ti ${t.icon}" aria-hidden="true"></i><span style="font-size:15px;font-weight:500">${t.name} settings</span></div>${!O.nudgesEnabled?'<span class="pill" style="background:var(--bg-warning);color:var(--text-warning)">Nudges off globally</span>':''}</div>
+    ${sw('t_en','Visible to developers','Show this tool on the Developer Experience dashboard.',c.enabled)}
+    ${sw('t_nu','Quick nudges','Allow auto-approved nudges for '+t.name+'.',c.nudge)}
+    <div style="padding-top:12px;border-top:0.5px solid var(--border)"><div class="label" style="margin-bottom:8px">Quick nudge</div>
+    <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(170px,1fr))">
+      ${num('t_amt','Nudge amount ($)',c.nudgeAmount,5)}${num('t_day','Max nudges per day',c.perDay,1)}${num('t_mon','Max nudges per month',c.monthlyCap,1)}${num('t_thr','Unlock at usage (%)',c.threshold,1)}
+    </div>
+    <div class="muted" style="margin-top:8px">Unlocks at ${c.threshold}% used or under ${$0(c.nudgeAmount)} left. Max auto-approved per user: ${$0(c.nudgeAmount*c.monthlyCap)} a month. The overall limit of ${O.maxNudgesMonth} nudges a month still applies.</div></div>
+    <div style="padding-top:12px;margin-top:12px;border-top:0.5px solid var(--border)"><div class="label" style="margin-bottom:8px">Custom requests</div>
+    <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(200px,1fr))">${num('t_max','Max monthly limit a user can request ($)',c.maxRequest,50)}</div></div>
+    <div class="err" id="err"></div><button class="primary" onclick="saveTool('${k}')">Save ${t.name} settings</button></div>`;
+}
+function saveOverall(){
+  const e=document.getElementById('err'),mx=parseInt(document.getElementById('o_max').value),nm=parseInt(document.getElementById('o_nm').value);
+  const cap=document.getElementById('o_cap').checked;
+  if(!nm||nm<1||nm>300){e.textContent='Max nudges per month must be between 1 and 300.';return}
+  if(cap&&(!mx||mx<100||mx>50000)){e.textContent='Combined max must be between $100 and $50,000.';return}
+  O.nudgesEnabled=document.getElementById('o_nudge').checked;O.maxNudgesMonth=nm;
+  O.capEnabled=cap;if(mx)O.maxTotal=mx;
+  st.toast='Overall settings saved.';render();
+}
+function saveTool(k){
+  const g=id=>parseInt(document.getElementById(id).value),e=document.getElementById('err');
+  const a=g('t_amt'),d=g('t_day'),m=g('t_mon'),th=g('t_thr'),mx=g('t_max');
+  const en=document.getElementById('t_en').checked;
+  if(!a||a<5||a>1000){e.textContent='Nudge amount must be between $5 and $1,000.';return}
+  if(!d||d<1||d>10){e.textContent='Max nudges per day must be between 1 and 10.';return}
+  if(!m||m<d||m>100){e.textContent='Max nudges per month must be at least the daily count and at most 100.';return}
+  if(!th||th<50||th>100){e.textContent='Unlock threshold must be between 50% and 100%.';return}
+  if(!mx||mx<a||mx>10000){e.textContent='Max request must be at least the nudge amount and at most $10,000.';return}
+  if(!en&&enabledTools().filter(x=>x!==k).length===0){e.textContent='Keep at least one tool visible.';return}
+  Object.assign(config.tools[k],{enabled:en,nudge:document.getElementById('t_nu').checked,nudgeAmount:a,perDay:d,monthlyCap:m,threshold:th,maxRequest:mx});
+  if(st.devTab===k&&!en)st.devTab='overall';
+  st.toast=tools[k].name+' settings saved.';render();
+}
+
+function render(){
+  document.getElementById('seg').innerHTML=`<button class="${st.mode==='dev'?'on':''}" onclick="setMode('dev')">Developer</button><button class="${st.mode==='admin'?'on':''}" onclick="setMode('admin')">Admin</button>`;
+  const list=st.mode==='dev'?[['overall','Overall'],...enabledTools().map(k=>[k,tools[k].name])]:[['analytics','Analytics'],['approvals','Approvals ('+requests.filter(r=>r.status==='Pending').length+')'],['settings','Settings']];
+  const cur=st.mode==='dev'?st.devTab:st.adminTab;
+  document.getElementById('tabs').innerHTML=list.map(([k,l])=>`<button class="tab ${k===cur?'on':''}" onclick="goTab('${k}')">${l}</button>`).join('');
+  document.getElementById('toast').innerHTML=st.toast?`<div class="toast"><i class="ti ti-circle-check" aria-hidden="true"></i> ${st.toast}</div>`:'';
+  document.getElementById('view').innerHTML=st.mode==='dev'?devView():st.adminTab==='analytics'?analytics():st.adminTab==='approvals'?approvals():settings();
+}
+render();
+</script>
+</body>
+</html>
